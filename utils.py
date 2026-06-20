@@ -2,13 +2,8 @@ import numpy as np
 
 
 def relu(input):
-    if input < 0:
-        return 0
-    else:
-        return input
+    return np.where(input < 0, input, input)
 
 
-def calculate_loss(input, prediction):
-    loss = prediction - input
-    square = loss**2
-    return loss, square
+def calculate_loss(result, prediction):
+    return np.mean((result - prediction) ** 2)

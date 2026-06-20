@@ -1,4 +1,5 @@
 from utils import *
+import numpy as np
 
 
 def forward_pass(input, weight, bias):
@@ -7,35 +8,40 @@ def forward_pass(input, weight, bias):
     return activated
 
 
-def back_propagation(input, weight, learning_rate, loss):
+def back_propagation(input, weight, bias, learning_rate, loss):
     delta_loss = 2 * loss
-    print(f"Rate of change in loss in terms of output {delta_loss}")
     delta_y = input
     gradient = delta_loss * delta_y
-    print(f"Gradient {gradient}")
+    gradient = np.clip(np.abs(gradient), 0.0, 1.0)
+
     new_weight = weight - (learning_rate * (-gradient))
-    print(f"New weight {new_weight}")
-    return new_weight
+    new_bias = bias - (learning_rate * np.sum(gradient))
+
+    return new_weight, new_bias
 
 
-def main(input, weight, bias, prediction, learning_rate, epoch):
+def train(input, weight, bias, answer, learning_rate, epoch):
     for x in range(epoch):
         forward_result = forward_pass(input, weight, bias)
-        print(f"Current output: {forward_result}")
-        if forward_result == prediction:
-            return forward_result
-        else:
-            loss, sqaured_loss = calculate_loss(forward_result, prediction)
-            print(f"Loss {sqaured_loss}")
-            weight = back_propagation(input, weight, learning_rate, loss)
+        squared_loss = calculate_loss(forward_result, answer)
+        print(
+            f"Epoch {x+1}, Loss: {squared_loss}, Current prediction: {forward_result}"
+        )
+
+        weight, bias = back_propagation(
+            input, weight, bias, learning_rate, squared_loss
+        )
+
+    return weight, bias
 
 
-x = 2
-w = 3
-b = 1
-prediction = 10
+x = np.array([2])
+w = np.array([3])
+b = np.array([1])
+answer = 10
 LR = 0.1
-epoch = 10
+epoch = 100
 
-output = main(x, w, b, prediction, LR, epoch)
-print(output)
+weight, bias = train(x, w, b, answer, LR, epoch)
+output = forward_pass(x, weight, bias)
+print(f"Output: {output}")
