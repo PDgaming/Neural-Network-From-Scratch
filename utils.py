@@ -1,13 +1,23 @@
 import numpy as np
 
 
-def relu(input):
-    return np.maximum(0, input)
+class Relu:
+
+    def forward(self, input):
+        self.input = input
+        return np.maximum(0, self.input)
+
+    def backward(self, gradient):
+        mask = self.input > 0
+        return gradient * mask
 
 
-def relu_derivative(input):
-    return np.where(input > 0, 1, 0)
+class MSE:
+    def forward(self, prediction, target):
+        self.target = target
+        self.prediction = prediction
 
+        return np.mean((prediction - target) ** 2)
 
-def calculate_loss(activation, prediction):
-    return np.mean((activation - prediction) ** 2)
+    def backward(self):
+        return 2 * (self.prediction - self.target)

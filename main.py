@@ -2,56 +2,61 @@ from utils import *
 import numpy as np
 
 
-def forward_pass(input, weight, bias):
-    z = (input * weight) + bias
-    a = relu(z)
+class Dense:
+    def __init__(self, weights, baiases):
+        self.weight = weights
+        self.bias = baiases
 
-    return z, a
+    def forward(self, input):
+        self.input = input
 
+        z = np.dot(self.input, self.weight) + self.bias
 
-def back_propagation(
-    x,
-    z,
-    a,
-    answer,
-    weight,
-    bias,
-    learning_rate,
-):
-    dL_da = 2 * (a - answer)
-    da_dz = relu_derivative(z)
+        return z
 
-    dL_dz = dL_da * da_dz
+    def backward(self, gradient):
+        dL_dw = gradient * self.input
+        dL_db = gradient
 
-    dL_dw = np.mean(dL_dz * x)
-    dL_db = np.mean(dL_dz)
+        self.dw = dL_dw
+        self.db = dL_db
 
-    weight -= learning_rate * dL_dw
-    bias -= learning_rate * dL_db
+        dL_dx = gradient * self.weight
 
-    return weight, bias
+        return dL_dx
+
+    def step(self, learning_rate):
+        self.weight -= learning_rate * self.dw
+        self.bias -= learning_rate * self.db
 
 
-def train(input, weight, bias, answer, learning_rate, epochs):
-    for epoch in range(epochs):
-        z, a = forward_pass(input, weight, bias)
-        loss = calculate_loss(a, answer)
-        print(f"Epoch {epoch+1}, Loss: {loss}, Current prediction: {a}")
-
-        weight, bias = back_propagation(
-            input, z, a, answer, weight, bias, learning_rate
-        )
-
-    return weight, bias
-
-
-x = np.array([2.0, 3.0, 4.0, 5.0])
+x = np.array([2.0])
 w = np.array([3.0])
 b = np.array([1.0])
-answer = np.array([10.0, 15.0, 20.0, 25.0])
-LR = 0.01
-epoch = 1000
+target = np.array([10.0])
+LR = 0.1
+epoch = 100
 
-weight, bias = train(x, w, b, answer, LR, epoch)
-output = forward_pass(x, weight, bias)
-print(f"Output: {output}")
+
+dense = Dense(w, b)
+relu = Relu()
+MSE = MSE()
+
+
+def train(input, target, learning_rate, epochs):
+    for epoch in range(epochs):
+        z = dense.forward(input)
+        a = relu.forward(z)
+
+        loss = MSE.forward(a, target)
+        print(f"Epoch {epoch+1}, Loss: {loss}, Current prediction: {a}")
+
+        dL_da = MSE.backward()
+
+        dL_dz = relu.backward(dL_da)
+        dL_dx = dense.backward(dL_dz)
+
+        dense.step(learning_rate)
+
+
+train(x, target, LR, epoch)
