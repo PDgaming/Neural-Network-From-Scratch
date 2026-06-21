@@ -3,9 +3,9 @@ import numpy as np
 
 
 class Dense:
-    def __init__(self, weights, baiases):
-        self.weight = weights
-        self.bias = baiases
+    def __init__(self, weight, bias):
+        self.weight = weight
+        self.bias = bias
 
     def forward(self, input):
         self.input = input
@@ -34,7 +34,7 @@ x = np.array([2.0])
 w = np.array([3.0])
 b = np.array([1.0])
 target = np.array([10.0])
-LR = 0.1
+LR = 0.01
 epoch = 100
 
 
