@@ -3,44 +3,54 @@ import numpy as np
 
 
 def forward_pass(input, weight, bias):
-    y = (input * weight) + bias
-    activated = relu(y)
-    return activated
+    z = (input * weight) + bias
+    a = relu(z)
+
+    return z, a
 
 
-def back_propagation(input, weight, bias, learning_rate, loss):
-    delta_loss = 2 * loss
-    delta_y = input
-    gradient = delta_loss * delta_y
-    gradient = np.clip(np.abs(gradient), 0.0, 1.0)
+def back_propagation(
+    x,
+    z,
+    a,
+    answer,
+    weight,
+    bias,
+    learning_rate,
+):
+    dL_da = 2 * (a - answer)
+    da_dz = relu_derivative(z)
 
-    new_weight = weight - (learning_rate * (-gradient))
-    new_bias = bias - (learning_rate * np.sum(gradient))
+    dL_dz = dL_da * da_dz
 
-    return new_weight, new_bias
+    dL_dw = np.mean(dL_dz * x)
+    dL_db = np.mean(dL_dz)
+
+    weight -= learning_rate * dL_dw
+    bias -= learning_rate * dL_db
+
+    return weight, bias
 
 
-def train(input, weight, bias, answer, learning_rate, epoch):
-    for x in range(epoch):
-        forward_result = forward_pass(input, weight, bias)
-        squared_loss = calculate_loss(forward_result, answer)
-        print(
-            f"Epoch {x+1}, Loss: {squared_loss}, Current prediction: {forward_result}"
-        )
+def train(input, weight, bias, answer, learning_rate, epochs):
+    for epoch in range(epochs):
+        z, a = forward_pass(input, weight, bias)
+        loss = calculate_loss(a, answer)
+        print(f"Epoch {epoch+1}, Loss: {loss}, Current prediction: {a}")
 
         weight, bias = back_propagation(
-            input, weight, bias, learning_rate, squared_loss
+            input, z, a, answer, weight, bias, learning_rate
         )
 
     return weight, bias
 
 
-x = np.array([2])
-w = np.array([3])
-b = np.array([1])
-answer = 10
-LR = 0.1
-epoch = 100
+x = np.array([2.0, 3.0, 4.0, 5.0])
+w = np.array([3.0])
+b = np.array([1.0])
+answer = np.array([10.0, 15.0, 20.0, 25.0])
+LR = 0.01
+epoch = 1000
 
 weight, bias = train(x, w, b, answer, LR, epoch)
 output = forward_pass(x, weight, bias)
