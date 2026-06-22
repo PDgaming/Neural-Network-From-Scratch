@@ -2,10 +2,9 @@ import numpy as np
 
 
 class Relu:
-
     def forward(self, input):
         self.input = input
-        return np.maximum(0, self.input)
+        return np.maximum(0.1, self.input)
 
     def backward(self, gradient):
         mask = self.input > 0
@@ -20,4 +19,4 @@ class MSE:
         return np.mean((prediction - target) ** 2)
 
     def backward(self):
-        return 2 * (self.prediction - self.target)
+        return 2 * (self.prediction - self.target) / self.prediction.size
