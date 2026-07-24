@@ -24,6 +24,8 @@ class Trainer:
                 gradient = self.criterion.backward()
                 self.model.backward(gradient)
 
+                self.optimizer.step()
+
                 for layer in self.model.layers:
                     if layer.parameters() is not None:
                         self.optimizer.update(layer)

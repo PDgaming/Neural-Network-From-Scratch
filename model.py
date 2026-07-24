@@ -21,7 +21,11 @@ class Sequential:
             self.optimizer.update(layer)
 
     def predict(self, x):
-        return self.forward(x)
+        x = np.atleast_2d(x)
+        output = self.forward(x)
+        if output.shape[0] == 1:
+            output = output.squeeze()
+        return output
 
     def save(self, path):
         data = {}

@@ -1,13 +1,40 @@
 import numpy as np
-import datasets as ds
+import csv
+import os
 
 
 def load_dataset(name):
-    dataset = getattr(ds, name)
-    data = dataset["input"]
-    target = dataset["output"]
+    csv_path = os.path.join(os.path.dirname(__file__), "datasets", f"{name}.csv")
 
-    return data, target
+    with open(csv_path, "r") as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        rows = [row for row in reader]
+
+    mappings = {}
+    for col in range(len(header)):
+        values = [rows[r][col] for r in range(len(rows))]
+        try:
+            [float(v) for v in values]
+        except ValueError:
+            unique = sorted(set(values))
+            mappings[col] = {v: i for i, v in enumerate(unique)}
+
+    for row in rows:
+        for col in mappings:
+            row[col] = mappings[col][row[col]]
+
+    data = np.array([list(map(float, row)) for row in rows])
+    input_cols = [i for i, h in enumerate(header) if h.startswith("input_")]
+    output_cols = [i for i, h in enumerate(header) if h.startswith("output_")]
+
+    targets = data[:, output_cols].astype(int)
+    num_classes = max(len(v) for v in mappings.values())
+    one_hot = np.zeros((len(targets), num_classes))
+    for i, col in enumerate(mappings):
+        one_hot[np.arange(len(targets)), targets[:, i]] = 1
+
+    return data[:, input_cols], one_hot
 
 
 class Dataset:

@@ -20,7 +20,8 @@ class History:
 
     def plot_loss(self):
         plt.plot(self.losses)
-        plt.yscale("log")
+        if all(v > 0 for v in self.losses):
+            plt.yscale("log")
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.title("Training Loss")

@@ -8,6 +8,9 @@ class Optimizer:
     def update(self, layer):
         raise NotImplementedError
 
+    def step(self):
+        pass
+
 
 class SGD(Optimizer):
     def update(self, layer):
@@ -77,7 +80,6 @@ class Adam(Optimizer):
                 "v_b": np.zeros_like(layer.bias),
             }
 
-        self.t += 1
         m = self.m[id(layer)]
         v = self.v[id(layer)]
 
@@ -93,3 +95,6 @@ class Adam(Optimizer):
 
         layer.weight -= self.learning_rate * m_w_hat / (np.sqrt(v_w_hat) + self.epsilon)
         layer.bias -= self.learning_rate * m_b_hat / (np.sqrt(v_b_hat) + self.epsilon)
+
+    def step(self):
+        self.t += 1

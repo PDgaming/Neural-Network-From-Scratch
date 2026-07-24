@@ -9,11 +9,11 @@ from metrics import MAE as MAEMetric, RMSE, R2, Accuracy
 from optimizers import SGD, Momentum, Adam
 import numpy as np
 
-data, target = load_dataset("binary_digits_data")
+data, target = load_dataset("iris")
 
 input_size = data.shape[1]
-output_size = target.shape[1]
-hidden_size = 64
+output_size = 3
+hidden_size = 16
 
 
 def init():
@@ -21,25 +21,25 @@ def init():
     model = Sequential(
         [
             Dense(input_size, hidden_size),
-            Tanh(),
+            Relu(),
             Dense(hidden_size, output_size),
             Softmax(),
         ]
     )
     history = History()
     dataset = Dataset(data, target)
-    train_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
     test_loader = DataLoader(dataset, batch_size=16, shuffle=False)
 
     return model, criterion, history, dataset, train_loader, test_loader
 
 
 def train(model, criterion, history, loader, eval_data, eval_target):
-    optimizer = Adam(learning_rate=0.01, beta1=0.9)
-    metrics = [Accuracy()]
+    optimizer = Adam(learning_rate=0.01)
+    metrics = [Accuracy(), MSE()]
     trainer = Trainer(model, criterion, optimizer, epochs=10000, metrics=metrics)
     outputs, losses, metric_logs = trainer.fit(loader, eval_data, eval_target)
-    model.save("binary digits model")
+    model.save("iris model")
 
     history.update(
         eval_data,
@@ -67,8 +67,6 @@ def predict(model, input):
 
 model, criterion, history, dataset, train_loader, test_loader = init()
 
-# train(model, criterion, history, train_loader, data, target)
-load(model, "binary digits model.npz")
-predict(
-    model, [[0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0]]
-)
+train(model, criterion, history, train_loader, data, target)
+# load(model, "iris model.npz")
+predict(model, test_loader.dataset[69][0])
