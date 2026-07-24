@@ -4,7 +4,7 @@
 
 Before moving to CNNs, turn your current MLP into a solid training framework.
 
-## Training
+## Optimization
 
 -   Momentum
 -   RMSProp

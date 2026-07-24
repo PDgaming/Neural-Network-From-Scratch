@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -37,7 +38,24 @@ class History:
         plt.show()
 
     def plot_prediction(self):
-        plt.scatter(self.inputs, self.targets, label="Target")
-        plt.plot(self.inputs, self.predictions[-1], label="Prediction")
+        pred = self.predictions[-1]
+        target = self.targets
+        if target.ndim > 1 and target.shape[1] == 1:
+            target = target.squeeze()
+        if pred.ndim > 1 and pred.shape[1] == 1:
+            pred = pred.squeeze()
+
+        if self.inputs.ndim == 1 or self.inputs.shape[1] == 1:
+            x = self.inputs.squeeze()
+            idx = np.argsort(x)
+            plt.scatter(x, target, label="Target")
+            plt.plot(x[idx], pred[idx], label="Prediction")
+            plt.xlabel("Input")
+        else:
+            x = np.arange(len(self.inputs))
+            plt.scatter(x, target, label="Target")
+            plt.plot(x, pred, label="Prediction")
+            plt.xlabel("Sample Index")
+        plt.ylabel("Output")
         plt.legend()
         plt.show()

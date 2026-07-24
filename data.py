@@ -1,17 +1,21 @@
 import numpy as np
+import datasets as ds
 
-data = np.arange(-50, 50, dtype=float).reshape(-1, 1)
-target = 3 * data + 2
 
-data_mean = data.mean(axis=0)
-data_std = data.std(axis=0)
-target_mean = target.mean(axis=0)
-target_std = target.std(axis=0)
+def load_dataset(name):
+    dataset = getattr(ds, name)
+    data = dataset["input"]
+    target = dataset["output"]
 
-data = (data - data_mean) / data_std
-target = (target - target_mean) / target_std
+    # data_mean = data.mean(axis=0)
+    # data_std = data.std(axis=0)
+    # target_mean = target.mean(axis=0)
+    # target_std = target.std(axis=0)
 
-test_data = np.arange(-12.5, 15.5, 0.5).reshape(-1, 1)
+    # data = (data - data_mean) / data_std
+    # target = (target - target_mean) / target_std
+
+    return data, target
 
 
 class Dataset:

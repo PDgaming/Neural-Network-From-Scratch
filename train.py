@@ -45,6 +45,15 @@ class Trainer:
                             msg += f", {name}: {values[-1]:.6f}"
                 print(msg)
 
+            if eval_data is not None:
+                full_pred = self.model.forward(eval_data)
+                outputs.append(full_pred.copy())
+
+                if eval_target is not None:
+                    for metric in self.metrics:
+                        value = metric.forward(full_pred, eval_target)
+                        metric_logs[metric.__class__.__name__].append(value)
+
             if epoch_loss < 1e-6:
                 print(f"Converged at epoch {epoch+1}")
                 break

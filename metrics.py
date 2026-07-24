@@ -7,7 +7,7 @@ class Accuracy:
             predicted = np.argmax(prediction, axis=1)
         else:
             predicted = (prediction > 0.5).astype(int).squeeze()
-        return np.mean(predicted == target)
+        return np.mean(predicted == target.ravel())
 
 
 class MAE:
