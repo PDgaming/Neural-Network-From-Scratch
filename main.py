@@ -6,7 +6,7 @@ from data import load_dataset, Dataset, DataLoader
 from train import Trainer
 from history import History
 from metrics import MAE as MAEMetric, RMSE, R2, Accuracy
-from optimizers import SGD, Momentum
+from optimizers import SGD, Momentum, Adam
 import numpy as np
 
 data, target = load_dataset("binary_digits_data")
@@ -35,7 +35,7 @@ def init():
 
 
 def train(model, criterion, history, loader, eval_data, eval_target):
-    optimizer = Momentum(learning_rate=0.01, beta=0.9)
+    optimizer = Adam(learning_rate=0.01, beta1=0.9)
     metrics = [Accuracy()]
     trainer = Trainer(model, criterion, optimizer, epochs=10000, metrics=metrics)
     outputs, losses, metric_logs = trainer.fit(loader, eval_data, eval_target)
@@ -67,8 +67,8 @@ def predict(model, input):
 
 model, criterion, history, dataset, train_loader, test_loader = init()
 
-train(model, criterion, history, train_loader, data, target)
-# load(model, "binary digits model.npz")
+# train(model, criterion, history, train_loader, data, target)
+load(model, "binary digits model.npz")
 predict(
-    model, [[0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0]]
+    model, [[0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0]]
 )

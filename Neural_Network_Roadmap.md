@@ -6,9 +6,6 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 ## Optimization
 
--   Momentum
--   RMSProp
--   Adam
 -   Learning-rate scheduling
 
 ## Initialization
@@ -22,11 +19,10 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 Recommended progression:
 
-1.  Your childhood dataset
-2.  Iris
-3.  Wine
-4.  Breast Cancer Wisconsin
-5.  MNIST (using the MLP)
+1.  Iris
+2.  Wine
+3.  Breast Cancer Wisconsin
+4.  MNIST (using the MLP)
 
 Goal: reach roughly 97--98% accuracy on MNIST before moving to CNNs.
 
