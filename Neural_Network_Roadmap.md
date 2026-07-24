@@ -6,7 +6,6 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 ## Training
 
--   Mini-batch Gradient Descent
 -   Momentum
 -   RMSProp
 -   Adam
@@ -16,29 +15,6 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 -   Xavier Initialization
 -   He Initialization
-
-## Activation Functions
-
--   Sigmoid
--   Tanh
--   ReLU
--   Leaky ReLU
--   GELU (later)
-
-## Loss Functions
-
-Regression: - Mean Squared Error (MSE) - Mean Absolute Error (MAE) - Huber Loss
-
-Classification: - Binary Cross Entropy - Categorical Cross Entropy
-
-## Output Layer
-
--   Softmax
-
-## Evaluation
-
--   Accuracy
--   Train / Validation / Test split
 
 ---
 
