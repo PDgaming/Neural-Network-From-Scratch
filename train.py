@@ -1,15 +1,21 @@
 class Trainer:
-    def __init__(self, model, criterion, optimizer, epochs, metrics=None):
+    def __init__(self, model, criterion, optimizer, epochs, metrics=None,
+                 eval_every=10, patience=None):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.epochs = epochs
         self.metrics = metrics or []
+        self.eval_every = eval_every
+        self.patience = patience
 
     def fit(self, loader, eval_data=None, eval_target=None):
         losses = []
         outputs = []
         metric_logs = {metric.__class__.__name__: [] for metric in self.metrics}
+
+        best_loss = float("inf")
+        patience_counter = 0
 
         for epoch in range(self.epochs):
             epoch_loss = 0.0
@@ -33,7 +39,7 @@ class Trainer:
             epoch_loss /= batches
             losses.append(epoch_loss)
 
-            if (epoch + 1) % 10 == 0:
+            if (epoch + 1) % self.eval_every == 0:
                 if eval_data is not None:
                     full_pred = self.model.forward(eval_data)
                     outputs.append(full_pred.copy())
@@ -50,17 +56,14 @@ class Trainer:
                             msg += f", {name}: {values[-1]:.6f}"
                 print(msg)
 
-            if eval_data is not None:
-                full_pred = self.model.forward(eval_data)
-                outputs.append(full_pred.copy())
-
-                if eval_target is not None:
-                    for metric in self.metrics:
-                        value = metric.forward(full_pred, eval_target)
-                        metric_logs[metric.__class__.__name__].append(value)
-
-            if epoch_loss < 1e-6:
-                print(f"Converged at epoch {epoch+1}")
-                break
+            if self.patience is not None:
+                if epoch_loss < best_loss:
+                    best_loss = epoch_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience_counter >= self.patience:
+                        print(f"Early stopping at epoch {epoch+1}")
+                        break
 
         return outputs, losses, metric_logs

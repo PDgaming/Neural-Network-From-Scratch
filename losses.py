@@ -8,7 +8,7 @@ class MSE:
         return np.mean((prediction - target) ** 2)
 
     def backward(self):
-        return 2 * (self.prediction - self.target) / self.prediction.size
+        return 2 * (self.prediction - self.target) / self.prediction.shape[0]
 
 
 class MAE:
@@ -18,7 +18,7 @@ class MAE:
         return np.mean(np.abs(prediction - target))
 
     def backward(self):
-        return np.sign(self.prediction - self.target) / self.prediction.size
+        return np.sign(self.prediction - self.target) / self.prediction.shape[0]
 
 
 class Huber:
@@ -43,7 +43,7 @@ class Huber:
         abs_error = np.abs(error)
         quadratic = abs_error <= self.delta
         grad = np.where(quadratic, error, self.delta * np.sign(error))
-        return grad / self.prediction.size
+        return grad / self.prediction.shape[0]
 
 
 class BinaryCrossEntropy:
@@ -62,7 +62,7 @@ class BinaryCrossEntropy:
         return (
             (self.prediction - self.target)
             / (self.prediction * (1 - self.prediction))
-            / self.prediction.size
+            / self.prediction.shape[0]
         )
 
 

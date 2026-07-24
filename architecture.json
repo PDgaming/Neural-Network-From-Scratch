@@ -1,0 +1,16 @@
+[
+    {
+        "type": "Dense",
+        "units": 16
+    },
+    {
+        "type": "Relu"
+    },
+    {
+        "type": "Dense",
+        "units": 3
+    },
+    {
+        "type": "Softmax"
+    }
+]

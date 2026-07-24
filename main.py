@@ -1,72 +1,102 @@
-from losses import MSE, BinaryCrossEntropy, CategoricalCrossEntropy
-from activations import Relu, Tanh, Sigmoid, Softmax
-from layers import Dense
-from model import Sequential
 from data import load_dataset, Dataset, DataLoader
+from model import build_model
+from losses import MSE, CategoricalCrossEntropy, BinaryCrossEntropy, Huber
+from metrics import Accuracy, MAE, RMSE, R2
+from optimizers import SGD, Adam, Momentum, RMSProp
 from train import Trainer
 from history import History
-from metrics import MAE as MAEMetric, RMSE, R2, Accuracy
-from optimizers import SGD, Momentum, Adam
-import numpy as np
+import os
 
-data, target = load_dataset("iris")
+# =============================================================================
+# CONFIGURE YOUR EXPERIMENT HERE
+# =============================================================================
 
-input_size = data.shape[1]
-output_size = 3
-hidden_size = 16
+dataset_name = "iris"
+task = None
 
+architecture = [
+    {"type": "Dense", "units": 16},
+    {"type": "Relu"},
+    {"type": "Dense", "units": 3},
+    {"type": "Softmax"},
+]
 
-def init():
-    criterion = CategoricalCrossEntropy()
-    model = Sequential(
-        [
-            Dense(input_size, hidden_size),
-            Relu(),
-            Dense(hidden_size, output_size),
-            Softmax(),
-        ]
-    )
-    history = History()
-    dataset = Dataset(data, target)
-    train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
-    test_loader = DataLoader(dataset, batch_size=16, shuffle=False)
+loss_name = "categorical_crossentropy"
 
-    return model, criterion, history, dataset, train_loader, test_loader
+optimizer_name = "adam"
+learning_rate = 0.01
 
+epochs = 1000
+batch_size = 16
+eval_every = 50
+patience = 100
 
-def train(model, criterion, history, loader, eval_data, eval_target):
-    optimizer = Adam(learning_rate=0.01)
-    metrics = [Accuracy(), MSE()]
-    trainer = Trainer(model, criterion, optimizer, epochs=10000, metrics=metrics)
-    outputs, losses, metric_logs = trainer.fit(loader, eval_data, eval_target)
-    model.save("iris model")
+metrics_list = ["accuracy"]
 
-    history.update(
-        eval_data,
-        eval_target,
-        outputs,
-        losses,
-        metrics=metric_logs,
-    )
-    history.plot_loss()
-    history.plot_metrics()
-    history.plot_prediction()
+save_path = None
+load_path = None
 
+# =============================================================================
+# RUN
+# =============================================================================
 
-def load(model, name):
-    model.load(name)
+data, target, input_size, output_size, task_type, num_classes = load_dataset(
+    dataset_name, task=task
+)
 
+print(f"Loaded {dataset_name}: {data.shape[0]} samples, {input_size} features, "
+      f"{output_size} outputs ({task_type})")
 
-def predict(model, input):
-    prediction = model.predict(input)
-    # print(f"Data: {input}, \nPrediction: {prediction}")
-    print(
-        f"Data: {input}, \nPrediction: {np.array2string(prediction, precision=4, suppress_small=True)}"
-    )
+model = build_model(architecture, input_size, output_size)
 
+LOSS_MAP = {
+    "mse": MSE,
+    "huber": Huber,
+    "binary_crossentropy": BinaryCrossEntropy,
+    "categorical_crossentropy": CategoricalCrossEntropy,
+}
+criterion = LOSS_MAP[loss_name.lower()]()
 
-model, criterion, history, dataset, train_loader, test_loader = init()
+OPTIMIZER_MAP = {
+    "sgd": lambda: SGD(learning_rate),
+    "momentum": lambda: Momentum(learning_rate),
+    "rmsprop": lambda: RMSProp(learning_rate),
+    "adam": lambda: Adam(learning_rate),
+}
+optimizer = OPTIMIZER_MAP[optimizer_name.lower()]()
 
-train(model, criterion, history, train_loader, data, target)
-# load(model, "iris model.npz")
-predict(model, test_loader.dataset[69][0])
+METRIC_MAP = {
+    "accuracy": Accuracy,
+    "mae": MAE,
+    "rmse": RMSE,
+    "r2": R2,
+}
+metrics = [METRIC_MAP[m.lower()]() for m in metrics_list]
+
+dataset = Dataset(data, target)
+train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+history = History()
+trainer = Trainer(
+    model, criterion, optimizer,
+    epochs=epochs,
+    metrics=metrics,
+    eval_every=eval_every,
+    patience=patience
+)
+
+outputs, losses, metric_logs = trainer.fit(train_loader, data, target)
+
+if save_path:
+    os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
+    model.save(save_path)
+    print(f"Model saved to {save_path}.npz")
+
+if load_path:
+    model.load(load_path)
+    print(f"Model loaded from {load_path}")
+
+history.update(data, target, outputs, losses, metrics=metric_logs)
+history.plot_loss()
+history.plot_metrics()
+history.plot_prediction()

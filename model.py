@@ -1,4 +1,38 @@
 import numpy as np
+from layers import Dense
+from activations import Relu, Sigmoid, Tanh, LeakyRelu, Softmax
+
+
+LAYER_REGISTRY = {
+    "Dense": Dense,
+    "Relu": Relu,
+    "Sigmoid": Sigmoid,
+    "Tanh": Tanh,
+    "LeakyRelu": LeakyRelu,
+    "Softmax": Softmax,
+}
+
+
+def build_model(architecture, input_size, output_size):
+    layers = []
+    prev_units = input_size
+
+    for spec in architecture:
+        layer_type = spec["type"]
+
+        if layer_type not in LAYER_REGISTRY:
+            raise ValueError(
+                f"Unknown layer type: {layer_type}. Available: {list(LAYER_REGISTRY.keys())}"
+            )
+
+        if layer_type == "Dense":
+            out = spec.get("units", output_size)
+            layers.append(Dense(prev_units, out))
+            prev_units = out
+        else:
+            layers.append(LAYER_REGISTRY[layer_type]())
+
+    return Sequential(layers)
 
 
 class Sequential:
@@ -16,10 +50,6 @@ class Sequential:
             gradient = layer.backward(gradient)
         return gradient
 
-    def step(self):
-        for layer in self.layers:
-            self.optimizer.update(layer)
-
     def predict(self, x):
         x = np.atleast_2d(x)
         output = self.forward(x)
@@ -29,7 +59,6 @@ class Sequential:
 
     def save(self, path):
         data = {}
-
         dense_num = 0
 
         for layer in self.layers:
