@@ -22,12 +22,11 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 Recommended progression:
 
-1.  XOR
-2.  Your childhood dataset
-3.  Iris
-4.  Wine
-5.  Breast Cancer Wisconsin
-6.  MNIST (using the MLP)
+1.  Your childhood dataset
+2.  Iris
+3.  Wine
+4.  Breast Cancer Wisconsin
+5.  MNIST (using the MLP)
 
 Goal: reach roughly 97--98% accuracy on MNIST before moving to CNNs.
 

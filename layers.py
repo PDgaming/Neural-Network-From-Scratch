@@ -26,10 +26,6 @@ class Dense:
 
         return dL_dx
 
-    def step(self, learning_rate):
-        self.weight -= learning_rate * self.dw
-        self.bias -= learning_rate * self.db
-
     def parameters(self):
         return {
             "weight": self.weight,

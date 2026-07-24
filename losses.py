@@ -33,7 +33,7 @@ class Huber:
         quadratic = abs_error <= self.delta
         loss = np.where(
             quadratic,
-            0.5 * error ** 2,
+            0.5 * error**2,
             self.delta * (abs_error - 0.5 * self.delta),
         )
         return np.mean(loss)
@@ -76,4 +76,4 @@ class CategoricalCrossEntropy:
         return -np.mean(np.sum(target * np.log(self.prediction), axis=1))
 
     def backward(self):
-        return -self.target / self.prediction / self.prediction.shape[0]
+        return (self.prediction - self.target) / self.prediction.shape[0]

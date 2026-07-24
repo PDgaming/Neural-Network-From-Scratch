@@ -7,14 +7,6 @@ def load_dataset(name):
     data = dataset["input"]
     target = dataset["output"]
 
-    # data_mean = data.mean(axis=0)
-    # data_std = data.std(axis=0)
-    # target_mean = target.mean(axis=0)
-    # target_std = target.std(axis=0)
-
-    # data = (data - data_mean) / data_std
-    # target = (target - target_mean) / target_std
-
     return data, target
 
 

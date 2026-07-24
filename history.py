@@ -53,6 +53,10 @@ class History:
             plt.xlabel("Input")
         else:
             x = np.arange(len(self.inputs))
+            if target.ndim > 1:
+                target = np.argmax(target, axis=1)
+            if pred.ndim > 1:
+                pred = np.argmax(pred, axis=1)
             plt.scatter(x, target, label="Target")
             plt.plot(x, pred, label="Prediction")
             plt.xlabel("Sample Index")

@@ -5,9 +5,11 @@ class Accuracy:
     def forward(self, prediction, target):
         if prediction.ndim > 1 and prediction.shape[1] > 1:
             predicted = np.argmax(prediction, axis=1)
+            if target.ndim > 1 and target.shape[1] > 1:
+                target = np.argmax(target, axis=1)
         else:
             predicted = (prediction > 0.5).astype(int).squeeze()
-        return np.mean(predicted == target.ravel())
+        return np.mean(predicted == target)
 
 
 class MAE:

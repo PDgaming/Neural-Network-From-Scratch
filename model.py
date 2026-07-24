@@ -2,8 +2,9 @@ import numpy as np
 
 
 class Sequential:
-    def __init__(self, layers):
+    def __init__(self, layers, optimizer=None):
         self.layers = layers
+        self.optimizer = optimizer
 
     def forward(self, input):
         for layer in self.layers:
@@ -15,9 +16,9 @@ class Sequential:
             gradient = layer.backward(gradient)
         return gradient
 
-    def step(self, learning_rate):
+    def step(self):
         for layer in self.layers:
-            layer.step(learning_rate)
+            self.optimizer.update(layer)
 
     def predict(self, x):
         return self.forward(x)

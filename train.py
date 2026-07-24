@@ -1,8 +1,8 @@
 class Trainer:
-    def __init__(self, model, criterion, learning_rate, epochs, metrics=None):
+    def __init__(self, model, criterion, optimizer, epochs, metrics=None):
         self.model = model
         self.criterion = criterion
-        self.learning_rate = learning_rate
+        self.optimizer = optimizer
         self.epochs = epochs
         self.metrics = metrics or []
 
@@ -23,7 +23,10 @@ class Trainer:
 
                 gradient = self.criterion.backward()
                 self.model.backward(gradient)
-                self.model.step(self.learning_rate)
+
+                for layer in self.model.layers:
+                    if layer.parameters() is not None:
+                        self.optimizer.update(layer)
 
             epoch_loss /= batches
             losses.append(epoch_loss)
