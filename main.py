@@ -2,10 +2,9 @@ from losses import MSE
 from activations import Relu
 from layers import Dense
 from model import Sequential
-from data import data, target, test_data
+from data import data, target, test_data, Dataset, DataLoader
 from train import Trainer
 from history import History
-import numpy as np
 
 
 def init():
@@ -18,17 +17,20 @@ def init():
         ]
     )
     history = History()
+    dataset = Dataset(data, target)
+    train_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+    test_loader = DataLoader(dataset, batch_size=16, shuffle=False)
 
-    return model, criterion, history
+    return model, criterion, history, dataset, train_loader, test_loader
 
 
-def train(model, criterion, history):
-    trainer = Trainer(model, criterion, learning_rate=0.01, epochs=100000)
-    outputs, losses = trainer.fit(data, target)
+def train(model, criterion, history, loader, eval_data):
+    trainer = Trainer(model, criterion, learning_rate=0.01, epochs=100)
+    outputs, losses = trainer.fit(loader, eval_data)
     model.save("3x+2 model")
 
     history.update(
-        data,
+        eval_data,
         target,
         outputs,
         losses,
@@ -46,7 +48,8 @@ def predict(model, input):
     print(f"Data: {input}, \nPrediction: {prediction}")
 
 
-model, criterion, history = init()
-# train(model, criterion, history)
-load(model)
-predict(model, test_data)
+model, criterion, history, dataset, train_loader, test_loader = init()
+
+train(model, criterion, history, train_loader, data)
+# load(model)
+# predict(model, [12])

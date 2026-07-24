@@ -16,8 +16,8 @@ class Dense:
     def backward(self, gradient):
         batch_size = self.input.shape[0]
 
-        dL_dw = (self.input.T @ gradient) / batch_size
-        dL_db = np.mean(gradient, axis=0)
+        dL_dw = self.input.T @ gradient
+        dL_db = gradient.sum(axis=0)
 
         self.dw = dL_dw
         self.db = dL_db
