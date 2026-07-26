@@ -55,7 +55,7 @@ class Trainer:
                     for name, values in metric_logs.items():
                         if values:
                             msg += f", {name}: {values[-1]:.6f}"
-                print(msg)
+                print(msg, flush=True)
 
             if self.patience is not None:
                 if epoch_loss < best_loss:
@@ -64,7 +64,7 @@ class Trainer:
                 else:
                     patience_counter += 1
                     if patience_counter >= self.patience:
-                        print(f"Early stopping at epoch {epoch+1}")
+                        print(f"Early stopping at epoch {epoch+1}", flush=True)
                         break
 
             if self.scheduler is not None:

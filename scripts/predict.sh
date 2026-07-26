@@ -1,7 +1,9 @@
 python cli.py predict \
-  --load models/'wdbc model.npz' \
-  --dataset wdbc \
+  --load "models/mnist model.npz" \
+  --dataset mnist_test \
   --architecture architecture.json \
-  --input-size 30 \
-  --output-size 2 \
-  --input "12.05,14.63,78.04,449.3,0.1031,0.09092,0.06592,0.02749,0.1675,0.06043,0.2636,0.7294,1.848,19.87,0.005488,0.01427,0.02322,0.00566,0.01428,0.002422,13.76,20.7,89.88,582.6,0.1494,0.2156,0.305,0.06548,0.2747,0.08301"
+  --input-size 784 \
+  --output-size 10 \
+  --row 154 \
+  --task classification \
+  --visualize

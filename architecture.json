@@ -1,18 +1,17 @@
 [
     {
         "type": "Dense",
-        "units": 31,
-        "init": "He"
+        "units": 784
     },
     {
         "type": "Relu"
     },
     {
         "type": "Dense",
-        "units": 2,
-        "init": "Xavier"
+        "units": 10,
+        "init": "xavier"
     },
     {
-        "type": "Sigmoid"
+        "type": "Softmax"
     }
 ]

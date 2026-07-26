@@ -1,9 +1,10 @@
 python cli.py train \
-  --dataset wdbc \
+  --dataset mnist_train \
   --architecture architecture.json \
-  --loss binary_crossentropy \
+  --loss categorical_crossentropy \
   --optimizer adam \
   --lr 0.001 \
-  --epochs 500 \
-  --save models/'wdbc model' \
+  --max-samples 200 \
+  --epochs 100 \
+  --save models/'mnist model' \
   --plot

@@ -51,7 +51,7 @@ data, target, input_size, output_size, task_type, num_classes = load_dataset(
 
 print(
     f"Loaded {dataset_name}: {data.shape[0]} samples, {input_size} features, "
-    f"{output_size} outputs ({task_type})"
+    f"{output_size} outputs ({task_type})", flush=True
 )
 
 model = build_model(architecture, input_size, output_size)

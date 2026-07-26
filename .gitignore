@@ -10,3 +10,9 @@ wheels/
 .venv
 
 uv.lock
+
+# Dataset cache
+datasets/.cache/
+
+datasets/mnist_test.csv
+datasets/mnist_train.csv

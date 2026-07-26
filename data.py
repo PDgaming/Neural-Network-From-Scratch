@@ -1,7 +1,7 @@
 import numpy as np
-import csv
 import os
 import re
+import hashlib
 
 OUTPUT_KEYWORDS = {
     "label", "target", "class", "output", "y",
@@ -10,7 +10,7 @@ OUTPUT_KEYWORDS = {
 }
 
 
-def normalize_headers(header, rows):
+def normalize_headers(header, data):
     cleaned = [h.strip().lower() for h in header]
 
     already_normalized = all(
@@ -18,7 +18,7 @@ def normalize_headers(header, rows):
     ) and any(h.startswith("output_") for h in cleaned)
 
     if already_normalized:
-        return header, rows
+        return header, data
 
     keyword_matches = [i for i, h in enumerate(cleaned) if h in OUTPUT_KEYWORDS]
     explicit_output = None
@@ -42,19 +42,52 @@ def normalize_headers(header, rows):
 
     if not has_header:
         new_header = [f"input_{i}" for i in range(len(header) - 1)] + ["output_0"]
-        return new_header, rows
+        return new_header, data
 
     if explicit_output is not None:
         input_indices = [i for i in range(len(header)) if i != explicit_output]
         new_header = [f"input_{i}" for i in range(len(input_indices))] + ["output_0"]
-        new_rows = [[row[i] for i in input_indices] + [row[explicit_output]] for row in rows]
-        return new_header, new_rows
+        new_data = np.column_stack([data[:, input_indices], data[:, [explicit_output]]])
+        return new_header, new_data
 
     input_indices = list(range(len(header) - 1))
     output_index = len(header) - 1
     new_header = [f"input_{i}" for i in range(len(input_indices))] + ["output_0"]
-    new_rows = [[row[i] for i in input_indices] + [row[output_index]] for row in rows]
-    return new_header, new_rows
+    new_data = np.column_stack([data[:, input_indices], data[:, [output_index]]])
+    return new_header, new_data
+
+
+def _get_cache_path(csv_path, task, normalize, target_cols):
+    mtime = os.path.getmtime(csv_path)
+    key = f"{csv_path}|{mtime}|{task}|{normalize}|{target_cols}"
+    cache_dir = os.path.join(os.path.dirname(csv_path), ".cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_name = hashlib.md5(key.encode()).hexdigest() + ".npz"
+    return os.path.join(cache_dir, cache_name)
+
+
+def _load_from_cache(cache_path):
+    if not os.path.exists(cache_path):
+        return None
+    cached = np.load(cache_path, allow_pickle=True)
+    return (
+        cached["inputs"],
+        cached["targets"],
+        int(cached["meta"][0]),
+        int(cached["meta"][1]),
+        str(cached["meta"][2]),
+        int(cached["meta"][3]) if int(cached["meta"][3]) != -1 else None,
+    )
+
+
+def _save_to_cache(cache_path, inputs, targets, input_size, output_size, task, num_classes):
+    meta = np.array([
+        input_size,
+        output_size,
+        task,
+        num_classes if num_classes is not None else -1,
+    ], dtype=object)
+    np.savez(cache_path, inputs=inputs, targets=targets, meta=meta)
 
 
 def load_dataset(name, task=None, normalize=True, target_cols=None):
@@ -63,40 +96,50 @@ def load_dataset(name, task=None, normalize=True, target_cols=None):
     else:
         csv_path = os.path.join(os.path.dirname(__file__), "datasets", f"{name}.csv")
 
+    cache_path = _get_cache_path(csv_path, task, normalize, target_cols)
+    cached = _load_from_cache(cache_path)
+    if cached is not None:
+        return cached
+
     with open(csv_path, "r") as f:
-        reader = csv.reader(f)
-        header = [h.strip() for h in next(reader)]
-        rows = [list(row) for row in reader]
+        header = [h.strip() for h in f.readline().split(",")]
+        data = np.loadtxt(f, delimiter=",", dtype=str)
+    if data.ndim == 1:
+        data = data.reshape(1, -1)
 
     if target_cols is not None:
         cleaned = [h.strip().lower() for h in header]
         output_indices = [cleaned.index(t.lower()) for t in target_cols]
         input_indices = [i for i in range(len(header)) if i not in output_indices]
         new_header = [f"input_{i}" for i in range(len(input_indices))] + [f"output_{i}" for i in range(len(output_indices))]
-        new_rows = [[row[i] for i in input_indices] + [row[i] for i in output_indices] for row in rows]
-        header, rows = new_header, new_rows
+        data = np.column_stack([data[:, input_indices], data[:, output_indices]])
+        header = new_header
     else:
-        header, rows = normalize_headers(header, rows)
+        header, data = normalize_headers(header, data)
 
     input_cols = [i for i, h in enumerate(header) if h.startswith("input_")]
     output_cols = [i for i, h in enumerate(header) if h.startswith("output_")]
 
-    mappings = {}
-    for col in range(len(header)):
-        values = [rows[r][col] for r in range(len(rows))]
+    string_cols = {}
+    for col in range(data.shape[1]):
+        col_values = data[:, col]
+        n = len(col_values)
+        sample_indices = np.unique(np.concatenate([
+            np.arange(min(3, n)),
+            np.arange(max(0, n - 3), n),
+        ]))
         try:
-            [float(v) for v in values]
+            col_values[sample_indices].astype(float)
         except ValueError:
-            unique = sorted(set(values))
-            mappings[col] = {v: i for i, v in enumerate(unique)}
+            unique = np.unique(col_values)
+            string_cols[col] = {v: str(i) for i, v in enumerate(unique)}
 
-    for row in rows:
-        for col in mappings:
-            row[col] = mappings[col][row[col]]
+    for col, mapping in string_cols.items():
+        data[:, col] = np.array([mapping[v] for v in data[:, col]])
 
-    data = np.array([list(map(float, row)) for row in rows])
+    data = data.astype(np.float32)
 
-    inputs = data[:, input_cols].astype(np.float32)
+    inputs = data[:, input_cols]
     raw_targets = data[:, output_cols]
 
     unique_targets = np.unique(raw_targets)
@@ -109,9 +152,8 @@ def load_dataset(name, task=None, normalize=True, target_cols=None):
     if task == "classification":
         if raw_targets.shape[1] == 1:
             num_classes = len(unique_targets)
-            targets = np.zeros((len(raw_targets), num_classes))
-            for i, val in enumerate(raw_targets[:, 0]):
-                targets[i, int(val)] = 1
+            targets = np.zeros((len(raw_targets), num_classes), dtype=np.float32)
+            targets[np.arange(len(raw_targets)), raw_targets[:, 0].astype(int)] = 1
             output_size = num_classes
         else:
             targets = raw_targets.astype(np.float32)
@@ -130,6 +172,8 @@ def load_dataset(name, task=None, normalize=True, target_cols=None):
         inputs = (inputs - mean) / std
 
     input_size = inputs.shape[1]
+
+    _save_to_cache(cache_path, inputs, targets, input_size, output_size, task, num_classes)
 
     return inputs, targets, input_size, output_size, task, num_classes
 
@@ -164,16 +208,4 @@ class DataLoader:
             chunk = indices[start : start + self.batch_size]
             start += self.batch_size
 
-            x_batch = []
-            y_batch = []
-
-            for idx in chunk:
-                x, y = self.dataset[idx]
-
-                x_batch.append(x)
-                y_batch.append(y)
-
-            x_batch = np.array(x_batch)
-            y_batch = np.array(y_batch)
-
-            yield x_batch, y_batch
+            yield self.dataset.data[chunk], self.dataset.target[chunk]
