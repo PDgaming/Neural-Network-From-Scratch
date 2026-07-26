@@ -1,9 +1,63 @@
 import numpy as np
 import csv
 import os
+import re
+
+OUTPUT_KEYWORDS = {
+    "label", "target", "class", "output", "y",
+    "category", "answer", "prediction", "ground_truth",
+    "truth", "response", "dependent", "outcome",
+}
 
 
-def load_dataset(name, task=None, normalize=True):
+def normalize_headers(header, rows):
+    cleaned = [h.strip().lower() for h in header]
+
+    already_normalized = all(
+        re.fullmatch(r"input_\d+", h) for h in cleaned if not h.startswith("output_")
+    ) and any(h.startswith("output_") for h in cleaned)
+
+    if already_normalized:
+        return header, rows
+
+    keyword_matches = [i for i, h in enumerate(cleaned) if h in OUTPUT_KEYWORDS]
+    explicit_output = None
+
+    if len(keyword_matches) == 1:
+        explicit_output = keyword_matches[0]
+    elif len(keyword_matches) > 1:
+        names = [header[i] for i in keyword_matches]
+        raise ValueError(
+            f"Multiple output columns detected by keyword: {names}. "
+            "Use target_cols to specify which is the output."
+        )
+
+    has_header = True
+    if explicit_output is None:
+        try:
+            [float(v) for v in header]
+            has_header = False
+        except ValueError:
+            pass
+
+    if not has_header:
+        new_header = [f"input_{i}" for i in range(len(header) - 1)] + ["output_0"]
+        return new_header, rows
+
+    if explicit_output is not None:
+        input_indices = [i for i in range(len(header)) if i != explicit_output]
+        new_header = [f"input_{i}" for i in range(len(input_indices))] + ["output_0"]
+        new_rows = [[row[i] for i in input_indices] + [row[explicit_output]] for row in rows]
+        return new_header, new_rows
+
+    input_indices = list(range(len(header) - 1))
+    output_index = len(header) - 1
+    new_header = [f"input_{i}" for i in range(len(input_indices))] + ["output_0"]
+    new_rows = [[row[i] for i in input_indices] + [row[output_index]] for row in rows]
+    return new_header, new_rows
+
+
+def load_dataset(name, task=None, normalize=True, target_cols=None):
     if os.path.exists(name):
         csv_path = name
     else:
@@ -11,15 +65,21 @@ def load_dataset(name, task=None, normalize=True):
 
     with open(csv_path, "r") as f:
         reader = csv.reader(f)
-        header = next(reader)
+        header = [h.strip() for h in next(reader)]
         rows = [list(row) for row in reader]
+
+    if target_cols is not None:
+        cleaned = [h.strip().lower() for h in header]
+        output_indices = [cleaned.index(t.lower()) for t in target_cols]
+        input_indices = [i for i in range(len(header)) if i not in output_indices]
+        new_header = [f"input_{i}" for i in range(len(input_indices))] + [f"output_{i}" for i in range(len(output_indices))]
+        new_rows = [[row[i] for i in input_indices] + [row[i] for i in output_indices] for row in rows]
+        header, rows = new_header, new_rows
+    else:
+        header, rows = normalize_headers(header, rows)
 
     input_cols = [i for i, h in enumerate(header) if h.startswith("input_")]
     output_cols = [i for i, h in enumerate(header) if h.startswith("output_")]
-
-    if not input_cols or not output_cols:
-        input_cols = list(range(len(header) - 1))
-        output_cols = [len(header) - 1]
 
     mappings = {}
     for col in range(len(header)):

@@ -1,30 +1,12 @@
 # Neural Network Learning Roadmap
 
-# Phase 1 -- Finish the MLP
+# Phase 1 -- Practice Datasets
 
-Before moving to CNNs, turn your current MLP into a solid training framework.
-
-## Optimization
-
--   Learning-rate scheduling
-
-## Initialization
-
--   Xavier Initialization
--   He Initialization
+MNIST (using the MLP)
 
 ---
 
-# Phase 2 -- Practice Datasets
-
-Recommended progression:
-
-1.  Breast Cancer Wisconsin
-2.  MNIST (using the MLP)
-
----
-
-# Phase 3 -- Convolutional Neural Networks
+# Phase 2 -- Convolutional Neural Networks
 
 Learn:
 
@@ -39,7 +21,7 @@ Then solve MNIST again and compare the results with your MLP.
 
 ---
 
-# Phase 4 -- Transformers
+# Phase 3 -- Transformers
 
 Learn:
 
@@ -53,7 +35,7 @@ Learn:
 
 ---
 
-# Phase 6 -- Tiny LLM
+# Phase 4 -- Tiny LLM
 
 Build progressively:
 
@@ -63,21 +45,3 @@ Build progressively:
 4.  Tiny code completion model
 
 ---
-
-
-Even with manual backpropagation, structuring your project this way will make it much easier to add CNNs and, eventually, transformer layers.
-
----
-
-# Priority Checklist
-
-1.  Mini-batch training
-2.  Softmax
-3.  Cross-Entropy loss
-4.  Adam optimizer
-5.  He/Xavier initialization
-6.  Validation and evaluation
-7.  MNIST using the MLP
-8.  CNNs
-9.  Transformers
-10. Tiny LLM

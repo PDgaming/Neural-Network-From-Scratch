@@ -1,14 +1,16 @@
 [
     {
         "type": "Dense",
-        "units": 31
+        "units": 31,
+        "init": "He"
     },
     {
         "type": "Relu"
     },
     {
         "type": "Dense",
-        "units": 2
+        "units": 2,
+        "init": "Xavier"
     },
     {
         "type": "Sigmoid"

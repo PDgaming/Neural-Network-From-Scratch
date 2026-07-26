@@ -1,6 +1,6 @@
 class Trainer:
     def __init__(self, model, criterion, optimizer, epochs, metrics=None,
-                 eval_every=10, patience=None):
+                 eval_every=10, patience=None, scheduler=None):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
@@ -8,6 +8,7 @@ class Trainer:
         self.metrics = metrics or []
         self.eval_every = eval_every
         self.patience = patience
+        self.scheduler = scheduler
 
     def fit(self, loader, eval_data=None, eval_target=None):
         losses = []
@@ -65,5 +66,8 @@ class Trainer:
                     if patience_counter >= self.patience:
                         print(f"Early stopping at epoch {epoch+1}")
                         break
+
+            if self.scheduler is not None:
+                self.scheduler.step(epoch, metric=epoch_loss)
 
         return outputs, losses, metric_logs

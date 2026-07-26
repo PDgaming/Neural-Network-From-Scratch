@@ -1,10 +1,12 @@
 import numpy as np
+from initializers import He
 
 
 class Dense:
-    def __init__(self, input, output):
-        self.weight = np.random.randn(input, output) * np.sqrt(2 / input)
-        self.bias = np.ones(output) * 0.01
+    def __init__(self, input, output, initializer=None):
+        init = initializer or He()
+        self.weight = init.weights(input, output)
+        self.bias = init.biases(output)
 
     def forward(self, input):
         self.input = input

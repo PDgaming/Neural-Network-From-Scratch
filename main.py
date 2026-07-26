@@ -1,8 +1,6 @@
 from data import load_dataset, Dataset, DataLoader
 from model import build_model
-from losses import MSE, CategoricalCrossEntropy, BinaryCrossEntropy, Huber
-from metrics import Accuracy, MAE, RMSE, R2
-from optimizers import SGD, Adam, Momentum, RMSProp
+from registry import LOSS_REGISTRY, OPTIMIZER_REGISTRY, METRIC_REGISTRY, SCHEDULER_REGISTRY
 from train import Trainer
 from history import History
 import os
@@ -26,6 +24,13 @@ loss_name = "categorical_crossentropy"
 optimizer_name = "adam"
 learning_rate = 0.01
 
+# Set to None to disable scheduling, or use a dict like:
+# {"name": "steplr", "step_size": 100, "gamma": 0.5}
+# {"name": "exponentiallr", "gamma": 0.95}
+# {"name": "cosineannealinglr", "T_max": 100, "eta_min": 1e-5}
+# {"name": "reduceonplateau", "factor": 0.1, "patience": 10}
+scheduler_config = None
+
 epochs = 1000
 batch_size = 16
 eval_every = 50
@@ -44,45 +49,36 @@ data, target, input_size, output_size, task_type, num_classes = load_dataset(
     dataset_name, task=task
 )
 
-print(f"Loaded {dataset_name}: {data.shape[0]} samples, {input_size} features, "
-      f"{output_size} outputs ({task_type})")
+print(
+    f"Loaded {dataset_name}: {data.shape[0]} samples, {input_size} features, "
+    f"{output_size} outputs ({task_type})"
+)
 
 model = build_model(architecture, input_size, output_size)
 
-LOSS_MAP = {
-    "mse": MSE,
-    "huber": Huber,
-    "binary_crossentropy": BinaryCrossEntropy,
-    "categorical_crossentropy": CategoricalCrossEntropy,
-}
-criterion = LOSS_MAP[loss_name.lower()]()
+criterion = LOSS_REGISTRY[loss_name.lower()]()
+optimizer = OPTIMIZER_REGISTRY[optimizer_name.lower()](learning_rate)
+metrics = [METRIC_REGISTRY[m.lower()]() for m in metrics_list]
 
-OPTIMIZER_MAP = {
-    "sgd": lambda: SGD(learning_rate),
-    "momentum": lambda: Momentum(learning_rate),
-    "rmsprop": lambda: RMSProp(learning_rate),
-    "adam": lambda: Adam(learning_rate),
-}
-optimizer = OPTIMIZER_MAP[optimizer_name.lower()]()
-
-METRIC_MAP = {
-    "accuracy": Accuracy,
-    "mae": MAE,
-    "rmse": RMSE,
-    "r2": R2,
-}
-metrics = [METRIC_MAP[m.lower()]() for m in metrics_list]
+scheduler = None
+if scheduler_config is not None:
+    name = scheduler_config["name"].lower()
+    params = {k: v for k, v in scheduler_config.items() if k != "name"}
+    scheduler = SCHEDULER_REGISTRY[name](optimizer, **params)
 
 dataset = Dataset(data, target)
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 history = History()
 trainer = Trainer(
-    model, criterion, optimizer,
+    model,
+    criterion,
+    optimizer,
     epochs=epochs,
     metrics=metrics,
     eval_every=eval_every,
-    patience=patience
+    patience=patience,
+    scheduler=scheduler,
 )
 
 outputs, losses, metric_logs = trainer.fit(train_loader, data, target)

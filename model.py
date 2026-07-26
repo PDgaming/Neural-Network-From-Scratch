@@ -1,16 +1,6 @@
 import numpy as np
 from layers import Dense
-from activations import Relu, Sigmoid, Tanh, LeakyRelu, Softmax
-
-
-LAYER_REGISTRY = {
-    "Dense": Dense,
-    "Relu": Relu,
-    "Sigmoid": Sigmoid,
-    "Tanh": Tanh,
-    "LeakyRelu": LeakyRelu,
-    "Softmax": Softmax,
-}
+from registry import LAYER_REGISTRY, INITIALIZER_REGISTRY
 
 
 def build_model(architecture, input_size, output_size):
@@ -27,7 +17,13 @@ def build_model(architecture, input_size, output_size):
 
         if layer_type == "Dense":
             out = spec.get("units", output_size)
-            layers.append(Dense(prev_units, out))
+            init_name = spec.get("init", "he")
+            if init_name not in INITIALIZER_REGISTRY:
+                raise ValueError(
+                    f"Unknown initializer: {init_name}. Available: {list(INITIALIZER_REGISTRY.keys())}"
+                )
+            initializer = INITIALIZER_REGISTRY[init_name]()
+            layers.append(Dense(prev_units, out, initializer=initializer))
             prev_units = out
         else:
             layers.append(LAYER_REGISTRY[layer_type]())

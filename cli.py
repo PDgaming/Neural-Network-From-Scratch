@@ -4,33 +4,9 @@ import sys
 import numpy as np
 from data import load_dataset, Dataset, DataLoader
 from model import build_model
-from losses import MSE, CategoricalCrossEntropy, BinaryCrossEntropy, Huber
-from metrics import Accuracy, MAE, RMSE, R2
-from optimizers import SGD, Adam, Momentum, RMSProp
+from registry import LOSS_REGISTRY, OPTIMIZER_REGISTRY, METRIC_REGISTRY, SCHEDULER_REGISTRY
 from train import Trainer
 from history import History
-
-
-LOSS_MAP = {
-    "mse": MSE,
-    "huber": Huber,
-    "binary_crossentropy": BinaryCrossEntropy,
-    "categorical_crossentropy": CategoricalCrossEntropy,
-}
-
-OPTIMIZER_MAP = {
-    "sgd": SGD,
-    "momentum": Momentum,
-    "rmsprop": RMSProp,
-    "adam": Adam,
-}
-
-METRIC_MAP = {
-    "accuracy": Accuracy,
-    "mae": MAE,
-    "rmse": RMSE,
-    "r2": R2,
-}
 
 
 def train(args):
@@ -44,9 +20,14 @@ def train(args):
         architecture = json.load(f)
 
     model = build_model(architecture, input_size, output_size)
-    criterion = LOSS_MAP[args.loss]()
-    optimizer = OPTIMIZER_MAP[args.optimizer](args.lr)
-    metrics = [METRIC_MAP[m]() for m in args.metrics]
+    criterion = LOSS_REGISTRY[args.loss]()
+    optimizer = OPTIMIZER_REGISTRY[args.optimizer](args.lr)
+    metrics = [METRIC_REGISTRY[m]() for m in args.metrics]
+
+    scheduler = None
+    if args.scheduler:
+        params = json.loads(args.scheduler_args) if args.scheduler_args else {}
+        scheduler = SCHEDULER_REGISTRY[args.scheduler](optimizer, **params)
 
     dataset = Dataset(data, target)
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
@@ -56,7 +37,8 @@ def train(args):
         epochs=args.epochs,
         metrics=metrics,
         eval_every=args.eval_every,
-        patience=args.patience
+        patience=args.patience,
+        scheduler=scheduler,
     )
 
     outputs, losses, metric_logs = trainer.fit(loader, data, target)
@@ -100,14 +82,16 @@ def main():
     train_parser.add_argument("--dataset", required=True)
     train_parser.add_argument("--task", choices=["classification", "regression"])
     train_parser.add_argument("--architecture", required=True)
-    train_parser.add_argument("--loss", default="categorical_crossentropy", choices=list(LOSS_MAP.keys()))
-    train_parser.add_argument("--optimizer", default="adam", choices=list(OPTIMIZER_MAP.keys()))
+    train_parser.add_argument("--loss", default="categorical_crossentropy", choices=list(LOSS_REGISTRY.keys()))
+    train_parser.add_argument("--optimizer", default="adam", choices=list(OPTIMIZER_REGISTRY.keys()))
     train_parser.add_argument("--lr", type=float, default=0.01)
     train_parser.add_argument("--epochs", type=int, default=1000)
     train_parser.add_argument("--batch-size", type=int, default=16)
     train_parser.add_argument("--eval-every", type=int, default=10)
     train_parser.add_argument("--patience", type=int, default=None)
-    train_parser.add_argument("--metrics", nargs="+", default=["accuracy"], choices=list(METRIC_MAP.keys()))
+    train_parser.add_argument("--metrics", nargs="+", default=["accuracy"], choices=list(METRIC_REGISTRY.keys()))
+    train_parser.add_argument("--scheduler", default=None, choices=list(SCHEDULER_REGISTRY.keys()))
+    train_parser.add_argument("--scheduler-args", default=None, help='JSON string of scheduler kwargs, e.g. \'{"step_size": 100, "gamma": 0.5}\'')
     train_parser.add_argument("--save", default=None)
     train_parser.add_argument("--plot", action="store_true")
 
