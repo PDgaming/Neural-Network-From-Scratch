@@ -4,7 +4,7 @@ python cli.py train \
   --loss categorical_crossentropy \
   --optimizer adam \
   --lr 0.001 \
-  --max-samples 200 \
+  --max-samples 1000 \
   --epochs 100 \
   --save models/'mnist model' \
-  --plot
+  --live-plot

@@ -3,6 +3,7 @@ from model import build_model
 from registry import LOSS_REGISTRY, OPTIMIZER_REGISTRY, METRIC_REGISTRY, SCHEDULER_REGISTRY
 from train import Trainer
 from history import History
+from callbacks import LivePlotter
 import os
 
 # =============================================================================
@@ -38,6 +39,8 @@ patience = 100
 
 metrics_list = ["accuracy"]
 
+live_plot = True
+
 save_path = None
 load_path = None
 
@@ -70,6 +73,11 @@ dataset = Dataset(data, target)
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 history = History()
+
+callbacks = []
+if live_plot:
+    callbacks.append(LivePlotter(eval_every=eval_every))
+
 trainer = Trainer(
     model,
     criterion,
@@ -79,6 +87,7 @@ trainer = Trainer(
     eval_every=eval_every,
     patience=patience,
     scheduler=scheduler,
+    callbacks=callbacks,
 )
 
 outputs, losses, metric_logs = trainer.fit(train_loader, data, target)

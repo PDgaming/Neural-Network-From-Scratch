@@ -8,6 +8,7 @@ from model import build_model
 from registry import LOSS_REGISTRY, OPTIMIZER_REGISTRY, METRIC_REGISTRY, SCHEDULER_REGISTRY
 from train import Trainer
 from history import History
+from callbacks import LivePlotter
 
 
 def train(args):
@@ -36,6 +37,10 @@ def train(args):
     dataset = Dataset(data, target)
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
+    callbacks = []
+    if args.live_plot:
+        callbacks.append(LivePlotter(eval_every=args.eval_every))
+
     trainer = Trainer(
         model, criterion, optimizer,
         epochs=args.epochs,
@@ -43,6 +48,7 @@ def train(args):
         eval_every=args.eval_every,
         patience=args.patience,
         scheduler=scheduler,
+        callbacks=callbacks,
     )
 
     outputs, losses, metric_logs = trainer.fit(loader, data, target)
@@ -126,6 +132,7 @@ def main():
     train_parser.add_argument("--scheduler-args", default=None, help='JSON string of scheduler kwargs, e.g. \'{"step_size": 100, "gamma": 0.5}\'')
     train_parser.add_argument("--save", default=None)
     train_parser.add_argument("--plot", action="store_true")
+    train_parser.add_argument("--live-plot", action="store_true", help="Show live training progress plots")
 
     predict_parser = subparsers.add_parser("predict")
     predict_parser.add_argument("--load", required=True)

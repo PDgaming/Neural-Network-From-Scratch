@@ -1,6 +1,6 @@
 class Trainer:
     def __init__(self, model, criterion, optimizer, epochs, metrics=None,
-                 eval_every=10, patience=None, scheduler=None):
+                 eval_every=10, patience=None, scheduler=None, callbacks=None):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
@@ -9,6 +9,7 @@ class Trainer:
         self.eval_every = eval_every
         self.patience = patience
         self.scheduler = scheduler
+        self.callbacks = callbacks or []
 
     def fit(self, loader, eval_data=None, eval_target=None):
         losses = []
@@ -17,6 +18,9 @@ class Trainer:
 
         best_loss = float("inf")
         patience_counter = 0
+
+        for cb in self.callbacks:
+            cb.on_train_begin()
 
         for epoch in range(self.epochs):
             epoch_loss = 0.0
@@ -40,22 +44,30 @@ class Trainer:
             epoch_loss /= batches
             losses.append(epoch_loss)
 
-            if (epoch + 1) % self.eval_every == 0:
-                if eval_data is not None:
-                    full_pred = self.model.forward(eval_data)
+            current_metrics = {}
+
+            if eval_data is not None:
+                full_pred = self.model.forward(eval_data)
+
+                if (epoch + 1) % self.eval_every == 0:
                     outputs.append(full_pred.copy())
 
-                    if eval_target is not None:
-                        for metric in self.metrics:
-                            value = metric.forward(full_pred, eval_target)
-                            metric_logs[metric.__class__.__name__].append(value)
+                if eval_target is not None:
+                    for metric in self.metrics:
+                        value = metric.forward(full_pred, eval_target)
+                        metric_logs[metric.__class__.__name__].append(value)
+                        current_metrics[metric.__class__.__name__] = value
 
-                msg = f"Epoch {epoch+1}, Loss: {epoch_loss:.6f}"
-                if eval_target is not None and self.metrics:
-                    for name, values in metric_logs.items():
-                        if values:
-                            msg += f", {name}: {values[-1]:.6f}"
-                print(msg, flush=True)
+            msg = f"Epoch {epoch+1}, Loss: {epoch_loss:.6f}"
+            if eval_target is not None and self.metrics:
+                for name, values in metric_logs.items():
+                    if values:
+                        msg += f", {name}: {values[-1]:.6f}"
+            print(msg, flush=True)
+
+            logs = {"epoch": epoch, "loss": epoch_loss, "metrics": current_metrics}
+            for cb in self.callbacks:
+                cb.on_epoch_end(epoch, logs)
 
             if self.patience is not None:
                 if epoch_loss < best_loss:
@@ -69,5 +81,8 @@ class Trainer:
 
             if self.scheduler is not None:
                 self.scheduler.step(epoch, metric=epoch_loss)
+
+        for cb in self.callbacks:
+            cb.on_train_end()
 
         return outputs, losses, metric_logs
