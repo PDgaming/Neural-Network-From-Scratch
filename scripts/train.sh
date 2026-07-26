@@ -1,9 +1,9 @@
 python cli.py train \
-  --dataset wine \
+  --dataset wdbc \
   --architecture architecture.json \
-  --loss categorical_crossentropy \
+  --loss binary_crossentropy \
   --optimizer adam \
-  --lr 0.01 \
-  --epochs 1000 \
-  --save models/wine \
+  --lr 0.001 \
+  --epochs 500 \
+  --save models/'wdbc model' \
   --plot

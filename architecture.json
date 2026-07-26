@@ -1,16 +1,16 @@
 [
     {
         "type": "Dense",
-        "units": 14
+        "units": 31
     },
     {
         "type": "Relu"
     },
     {
         "type": "Dense",
-        "units": 3
+        "units": 2
     },
     {
-        "type": "Softmax"
+        "type": "Sigmoid"
     }
 ]

@@ -1,7 +1,7 @@
 python cli.py predict \
-  --load models/wine.npz \
-  --dataset wine \
+  --load models/'wdbc model.npz' \
+  --dataset wdbc \
   --architecture architecture.json \
-  --input-size 13 \
-  --output-size 3 \
-  --input "12.85,3.27,2.58,22,106,1.65,0.6,0.6,0.96,5.58,0.87,2.11,570"
+  --input-size 30 \
+  --output-size 2 \
+  --input "12.05,14.63,78.04,449.3,0.1031,0.09092,0.06592,0.02749,0.1675,0.06043,0.2636,0.7294,1.848,19.87,0.005488,0.01427,0.02322,0.00566,0.01428,0.002422,13.76,20.7,89.88,582.6,0.1494,0.2156,0.305,0.06548,0.2747,0.08301"
