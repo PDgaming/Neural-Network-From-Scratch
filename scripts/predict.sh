@@ -1,6 +1,7 @@
 python cli.py predict \
-  --load models/my_model.npz \
+  --load models/wine.npz \
+  --dataset wine \
   --architecture architecture.json \
-  --input-size 4 \
+  --input-size 13 \
   --output-size 3 \
-  --input "5.1,3.5,1.4,0.2"
+  --input "12.85,3.27,2.58,22,106,1.65,0.6,0.6,0.96,5.58,0.87,2.11,570"
