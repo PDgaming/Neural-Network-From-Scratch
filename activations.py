@@ -7,8 +7,7 @@ class Relu:
         return np.maximum(0, self.input)
 
     def backward(self, gradient):
-        mask = self.input > 0
-        return gradient * mask
+        return gradient * (self.input > 0)
 
     def step(self, learning_rate):
         pass

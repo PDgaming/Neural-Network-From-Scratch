@@ -14,26 +14,21 @@ dataset_name = "iris"
 task = None
 
 architecture = [
-    {"type": "Dense", "units": 16},
+    {"type": "Dense", "units": 16, "init": "he"},
     {"type": "Relu"},
-    {"type": "Dense", "units": 3},
+    {"type": "Dense", "units": 3, "init": "xavier"},
     {"type": "Softmax"},
 ]
 
 loss_name = "categorical_crossentropy"
 
 optimizer_name = "adam"
-learning_rate = 0.01
+learning_rate = 0.001
 
-# Set to None to disable scheduling, or use a dict like:
-# {"name": "steplr", "step_size": 100, "gamma": 0.5}
-# {"name": "exponentiallr", "gamma": 0.95}
-# {"name": "cosineannealinglr", "T_max": 100, "eta_min": 1e-5}
-# {"name": "reduceonplateau", "factor": 0.1, "patience": 10}
-scheduler_config = None
+scheduler_config = {"name": "cosineannealinglr", "T_max": 1000, "eta_min": 1e-6}
 
 epochs = 1000
-batch_size = 16
+batch_size = 32
 eval_every = 50
 patience = 100
 

@@ -4,7 +4,13 @@ python cli.py train \
   --loss categorical_crossentropy \
   --optimizer adam \
   --lr 0.001 \
-  --max-samples 1000 \
-  --epochs 100 \
+  --max-samples 500 \
+  --epochs 500 \
+  --batch-size 32 \
+  --eval-every 50 \
+  --patience 100 \
+  --metrics accuracy \
+  --scheduler cosineannealinglr \
+  --scheduler-args '{"T_max": 500, "eta_min": 1e-6}' \
   --save models/'mnist model' \
   --live-plot

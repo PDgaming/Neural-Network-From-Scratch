@@ -70,31 +70,33 @@ class Adam(Optimizer):
         self.t = 0
 
     def update(self, layer):
-        if id(layer) not in self.m:
-            self.m[id(layer)] = {
+        lid = id(layer)
+        if lid not in self.m:
+            self.m[lid] = {
                 "m_w": np.zeros_like(layer.weight),
                 "m_b": np.zeros_like(layer.bias),
             }
-            self.v[id(layer)] = {
+            self.v[lid] = {
                 "v_w": np.zeros_like(layer.weight),
                 "v_b": np.zeros_like(layer.bias),
             }
 
-        m = self.m[id(layer)]
-        v = self.v[id(layer)]
+        m = self.m[lid]
+        v = self.v[lid]
 
-        m["m_w"] = self.beta1 * m["m_w"] + (1 - self.beta1) * layer.dw
-        m["m_b"] = self.beta1 * m["m_b"] + (1 - self.beta1) * layer.db
-        v["v_w"] = self.beta2 * v["v_w"] + (1 - self.beta2) * layer.dw ** 2
-        v["v_b"] = self.beta2 * v["v_b"] + (1 - self.beta2) * layer.db ** 2
+        one_minus_beta1 = 1 - self.beta1
+        one_minus_beta2 = 1 - self.beta2
 
-        m_w_hat = m["m_w"] / (1 - self.beta1 ** self.t)
-        m_b_hat = m["m_b"] / (1 - self.beta1 ** self.t)
-        v_w_hat = v["v_w"] / (1 - self.beta2 ** self.t)
-        v_b_hat = v["v_b"] / (1 - self.beta2 ** self.t)
+        m["m_w"] += one_minus_beta1 * (layer.dw - m["m_w"])
+        m["m_b"] += one_minus_beta1 * (layer.db - m["m_b"])
+        v["v_w"] += one_minus_beta2 * (layer.dw ** 2 - v["v_w"])
+        v["v_b"] += one_minus_beta2 * (layer.db ** 2 - v["v_b"])
 
-        layer.weight -= self.learning_rate * m_w_hat / (np.sqrt(v_w_hat) + self.epsilon)
-        layer.bias -= self.learning_rate * m_b_hat / (np.sqrt(v_b_hat) + self.epsilon)
+        bc1 = 1 - self.beta1 ** self.t
+        bc2 = 1 - self.beta2 ** self.t
+
+        layer.weight -= self.learning_rate * (m["m_w"] / bc1) / (np.sqrt(v["v_w"] / bc2) + self.epsilon)
+        layer.bias -= self.learning_rate * (m["m_b"] / bc1) / (np.sqrt(v["v_b"] / bc2) + self.epsilon)
 
     def step(self):
         self.t += 1

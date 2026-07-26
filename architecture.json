@@ -1,7 +1,8 @@
 [
     {
         "type": "Dense",
-        "units": 784
+        "units": 784,
+        "init": "he"
     },
     {
         "type": "Relu"

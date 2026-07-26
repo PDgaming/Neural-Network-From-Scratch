@@ -16,17 +16,16 @@ class Dense:
         return z
 
     def backward(self, gradient):
-        batch_size = self.input.shape[0]
+        if not hasattr(self, '_dw_buf') or self._dw_buf.shape != (self.input.shape[1], gradient.shape[1]):
+            self._dw_buf = np.empty((self.input.shape[1], gradient.shape[1]), dtype=self.weight.dtype)
+            self._db_buf = np.empty(gradient.shape[1], dtype=self.bias.dtype)
 
-        dL_dw = self.input.T @ gradient
-        dL_db = gradient.sum(axis=0)
+        np.matmul(self.input.T, gradient, out=self._dw_buf)
+        np.sum(gradient, axis=0, out=self._db_buf)
+        self.dw = self._dw_buf
+        self.db = self._db_buf
 
-        self.dw = dL_dw
-        self.db = dL_db
-
-        dL_dx = gradient @ self.weight.T
-
-        return dL_dx
+        return gradient @ self.weight.T
 
     def parameters(self):
         return {

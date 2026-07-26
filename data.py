@@ -198,14 +198,12 @@ class DataLoader:
         self.shuffle = shuffle
 
     def __iter__(self):
-        indices = np.arange(len(self.dataset))
-
+        n = len(self.dataset)
         if self.shuffle:
-            np.random.shuffle(indices)
+            indices = np.random.permutation(n)
+        else:
+            indices = np.arange(n)
 
-        start = 0
-        while start < len(indices):
-            chunk = indices[start : start + self.batch_size]
-            start += self.batch_size
-
+        for start in range(0, n, self.batch_size):
+            chunk = indices[start:start + self.batch_size]
             yield self.dataset.data[chunk], self.dataset.target[chunk]

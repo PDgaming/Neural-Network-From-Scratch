@@ -46,11 +46,9 @@ class Trainer:
 
             current_metrics = {}
 
-            if eval_data is not None:
+            if eval_data is not None and (epoch + 1) % self.eval_every == 0:
                 full_pred = self.model.forward(eval_data)
-
-                if (epoch + 1) % self.eval_every == 0:
-                    outputs.append(full_pred.copy())
+                outputs.append(full_pred.copy())
 
                 if eval_target is not None:
                     for metric in self.metrics:
@@ -58,16 +56,16 @@ class Trainer:
                         metric_logs[metric.__class__.__name__].append(value)
                         current_metrics[metric.__class__.__name__] = value
 
-            msg = f"Epoch {epoch+1}, Loss: {epoch_loss:.6f}"
-            if eval_target is not None and self.metrics:
-                for name, values in metric_logs.items():
-                    if values:
-                        msg += f", {name}: {values[-1]:.6f}"
-            print(msg, flush=True)
+                msg = f"Epoch {epoch+1}, Loss: {epoch_loss:.6f}"
+                if eval_target is not None and self.metrics:
+                    for name, values in metric_logs.items():
+                        if values:
+                            msg += f", {name}: {values[-1]:.6f}"
+                print(msg, flush=True)
 
-            logs = {"epoch": epoch, "loss": epoch_loss, "metrics": current_metrics}
-            for cb in self.callbacks:
-                cb.on_epoch_end(epoch, logs)
+                logs = {"epoch": epoch, "loss": epoch_loss, "metrics": current_metrics}
+                for cb in self.callbacks:
+                    cb.on_epoch_end(epoch, logs)
 
             if self.patience is not None:
                 if epoch_loss < best_loss:
