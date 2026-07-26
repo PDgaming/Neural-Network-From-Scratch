@@ -76,4 +76,4 @@ class CategoricalCrossEntropy:
         return -np.mean(np.sum(target * np.log(self.prediction), axis=1))
 
     def backward(self):
-        return (self.prediction - self.target) / self.prediction.shape[0]
+        return -self.target / (self.prediction * self.prediction.shape[0])

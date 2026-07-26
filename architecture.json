@@ -1,7 +1,7 @@
 [
     {
         "type": "Dense",
-        "units": 16
+        "units": 14
     },
     {
         "type": "Relu"

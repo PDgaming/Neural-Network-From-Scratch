@@ -19,12 +19,8 @@ Before moving to CNNs, turn your current MLP into a solid training framework.
 
 Recommended progression:
 
-1.  Iris
-2.  Wine
-3.  Breast Cancer Wisconsin
-4.  MNIST (using the MLP)
-
-Goal: reach roughly 97--98% accuracy on MNIST before moving to CNNs.
+1.  Breast Cancer Wisconsin
+2.  MNIST (using the MLP)
 
 ---
 

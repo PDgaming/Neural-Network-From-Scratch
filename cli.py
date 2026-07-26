@@ -8,6 +8,7 @@ from losses import MSE, CategoricalCrossEntropy, BinaryCrossEntropy, Huber
 from metrics import Accuracy, MAE, RMSE, R2
 from optimizers import SGD, Adam, Momentum, RMSProp
 from train import Trainer
+from history import History
 
 
 LOSS_MAP = {
@@ -64,17 +65,28 @@ def train(args):
         model.save(args.save)
         print(f"Model saved to {args.save}.npz")
 
+    if args.plot:
+        history = History()
+        history.update(data, target, outputs, losses, metrics=metric_logs)
+        history.plot_loss()
+        history.plot_metrics()
+        history.plot_prediction()
+
 
 def predict(args):
     with open(args.architecture) as f:
         architecture = json.load(f)
 
-    dummy_input = np.zeros((1, args.input_size))
     model = build_model(architecture, args.input_size, args.output_size)
     model.load(args.load)
 
     values = [float(x) for x in args.input.split(",")]
     x = np.array(values).reshape(1, -1)
+
+    raw, _, _, _, _, _ = load_dataset(args.dataset, task=args.task, normalize=False)
+    mean = raw.mean(axis=0)
+    std = raw.std(axis=0) + 1e-8
+    x = (x - mean) / std
 
     pred = model.predict(x)
     print(f"Prediction: {np.array2string(pred, precision=4, suppress_small=True)}")
@@ -97,13 +109,16 @@ def main():
     train_parser.add_argument("--patience", type=int, default=None)
     train_parser.add_argument("--metrics", nargs="+", default=["accuracy"], choices=list(METRIC_MAP.keys()))
     train_parser.add_argument("--save", default=None)
+    train_parser.add_argument("--plot", action="store_true")
 
     predict_parser = subparsers.add_parser("predict")
     predict_parser.add_argument("--load", required=True)
     predict_parser.add_argument("--architecture", required=True)
+    predict_parser.add_argument("--dataset", required=True)
     predict_parser.add_argument("--input-size", type=int, required=True)
     predict_parser.add_argument("--output-size", type=int, required=True)
     predict_parser.add_argument("--input", required=True)
+    predict_parser.add_argument("--task", choices=["classification", "regression"])
 
     args = parser.parse_args()
 
