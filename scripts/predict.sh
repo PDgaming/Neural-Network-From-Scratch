@@ -4,6 +4,6 @@ python cli.py predict \
   --architecture architecture.json \
   --input-size 784 \
   --output-size 10 \
-  --row 154 \
+  --row 12 \
   --task classification \
   --visualize

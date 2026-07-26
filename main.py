@@ -31,6 +31,7 @@ epochs = 1000
 batch_size = 32
 eval_every = 50
 patience = 100
+val_split = 0.2
 
 metrics_list = ["accuracy"]
 
@@ -85,7 +86,7 @@ trainer = Trainer(
     callbacks=callbacks,
 )
 
-outputs, losses, metric_logs = trainer.fit(train_loader, data, target)
+outputs, losses, metric_logs = trainer.fit(train_loader, data, target, val_split=val_split)
 
 if save_path:
     os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)

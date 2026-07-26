@@ -2,7 +2,7 @@ from layers import Dense
 from activations import Relu, Sigmoid, Tanh, LeakyRelu, Softmax
 from initializers import He, Xavier, Uniform
 from losses import MSE, CategoricalCrossEntropy, BinaryCrossEntropy, Huber
-from metrics import Accuracy, MAE, RMSE, R2
+from metrics import Accuracy, Precision, Recall, F1Score, MAE, RMSE, R2
 from optimizers import SGD, Adam, Momentum, RMSProp
 from schedulers import StepLR, ExponentialLR, CosineAnnealingLR, ReduceOnPlateau
 
@@ -38,6 +38,9 @@ OPTIMIZER_REGISTRY = {
 
 METRIC_REGISTRY = {
     "accuracy": Accuracy,
+    "precision": Precision,
+    "recall": Recall,
+    "f1": F1Score,
     "mae": MAE,
     "rmse": RMSE,
     "r2": R2,

@@ -11,7 +11,17 @@ class Trainer:
         self.scheduler = scheduler
         self.callbacks = callbacks or []
 
-    def fit(self, loader, eval_data=None, eval_target=None):
+    def fit(self, loader, eval_data=None, eval_target=None, val_split=None):
+        import numpy as np
+
+        if val_split is not None and val_split > 0 and eval_data is not None:
+            n = eval_data.shape[0]
+            indices = np.random.permutation(n)
+            val_size = int(n * val_split)
+            val_idx = indices[:val_size]
+            eval_data = eval_data[val_idx]
+            eval_target = eval_target[val_idx]
+
         losses = []
         outputs = []
         metric_logs = {metric.__class__.__name__: [] for metric in self.metrics}

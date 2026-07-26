@@ -51,7 +51,7 @@ def train(args):
         callbacks=callbacks,
     )
 
-    outputs, losses, metric_logs = trainer.fit(loader, data, target)
+    outputs, losses, metric_logs = trainer.fit(loader, data, target, val_split=args.val_split)
 
     if args.save:
         model.save(args.save)
@@ -127,6 +127,7 @@ def main():
     train_parser.add_argument("--eval-every", type=int, default=1)
     train_parser.add_argument("--max-samples", type=int, default=None)
     train_parser.add_argument("--patience", type=int, default=None)
+    train_parser.add_argument("--val-split", type=float, default=0.2, help="Fraction of data used for validation (default: 0.2)")
     train_parser.add_argument("--metrics", nargs="+", default=["accuracy"], choices=list(METRIC_REGISTRY.keys()))
     train_parser.add_argument("--scheduler", default=None, choices=list(SCHEDULER_REGISTRY.keys()))
     train_parser.add_argument("--scheduler-args", default=None, help='JSON string of scheduler kwargs, e.g. \'{"step_size": 100, "gamma": 0.5}\'')

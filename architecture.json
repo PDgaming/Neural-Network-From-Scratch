@@ -1,7 +1,7 @@
 [
     {
         "type": "Dense",
-        "units": 784,
+        "units": 32,
         "init": "he"
     },
     {
